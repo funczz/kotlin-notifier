@@ -221,7 +221,7 @@ class Notifier {
          * Notifierのシングルトン
          */
         @JvmStatic
-        fun getInstance() = instance ?: synchronized(this) {
+        fun getDefault() = instance ?: synchronized(this) {
             instance ?: Notifier().also {
                 instance = it
             }
