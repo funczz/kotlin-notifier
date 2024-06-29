@@ -25,5 +25,10 @@ interface NotifierSubscription : Flow.Subscription {
      */
     val executor: Optional<ThreadPoolExecutor>
 
+    /**
+     * イベントバスから呼び出される
+     */
+    fun onCall(notifier: Notifier)
+
 
 }

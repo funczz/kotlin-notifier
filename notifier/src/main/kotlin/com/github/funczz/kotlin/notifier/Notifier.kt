@@ -11,7 +11,7 @@ import kotlin.concurrent.withLock
  * イベントバス
  * @author funczz
  */
-object Notifier {
+class Notifier {
 
     /**
      * サブスクリプションのリスト
@@ -59,7 +59,10 @@ object Notifier {
                 throw IllegalArgumentException("Duplicate subscriber.")
             }
             when (_subscriptions.addIfAbsent(subscription)) {
-                true -> subscription.subscriber.onSubscribe(subscription)
+                true -> {
+                    subscription.onCall(notifier = this)
+                    subscription.subscriber.onSubscribe(subscription)
+                }
                 else -> {}
             }
         } catch (th: Throwable) {
@@ -122,6 +125,15 @@ object Notifier {
             }
         }
         result
+    }
+
+    /**
+     * サブスクリプションをリストから削除するが、サブスクライバに対しては何も操作を行わない
+     * サブスクリプションから呼び出される
+     * @param subscription サブスクリプション
+     */
+    fun onCancel(subscription: NotifierSubscription) {
+        cancel(subscription = subscription)
     }
 
     /**
@@ -199,6 +211,22 @@ object Notifier {
             subscription.subscriber.onComplete()
         }
         return cancel(subscription = subscription)
+    }
+
+    companion object {
+
+        private var instance: Notifier? = null
+
+        /**
+         * Notifierのシングルトン
+         */
+        @JvmStatic
+        fun getInstance() = instance ?: synchronized(this) {
+            instance ?: Notifier().also {
+                instance = it
+            }
+        }
+
     }
 
 }

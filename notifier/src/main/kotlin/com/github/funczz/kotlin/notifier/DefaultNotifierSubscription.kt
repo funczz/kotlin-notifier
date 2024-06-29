@@ -19,6 +19,11 @@ open class DefaultNotifierSubscription(
     ) : NotifierSubscription {
 
     /**
+     * cancelメソッドが呼び出された際に実行される関数
+     */
+    private var _cancelCode: (NotifierSubscription) -> Unit ={}
+
+    /**
      * requestメソッドが呼び出された際に実行される関数
      */
     private var _requestCode: (Long) -> Unit = {}
@@ -31,6 +36,10 @@ open class DefaultNotifierSubscription(
         _requestCode = function
     }
 
+    override fun onCall(notifier: Notifier) {
+        _cancelCode = notifier::onCancel
+    }
+
     override fun request(n: Long) {
         if (n <= 0L) {
             throw IllegalArgumentException("Subscription request is less than or equal to zero: n=$n")
@@ -39,7 +48,9 @@ open class DefaultNotifierSubscription(
     }
 
     override fun cancel() {
-        Notifier.cancel(subscription = this)
+        _cancelCode(this)
+        //再実行を防ぐため、実行後に初期化する
+        _cancelCode = {}
     }
 
 }
