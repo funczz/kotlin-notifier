@@ -1,8 +1,8 @@
 package com.github.funczz.kotlin.notifier
 
 import java.util.*
+import java.util.concurrent.Executor
 import java.util.concurrent.Flow
-import java.util.concurrent.ThreadPoolExecutor
 
 /**
  * NotifierSubscription の実装
@@ -14,14 +14,14 @@ open class DefaultNotifierSubscription(
 
     override val id: String = "",
 
-    override val executor: Optional<ThreadPoolExecutor> = Optional.empty(),
+    override val executor: Optional<Executor> = Optional.empty(),
 
     ) : NotifierSubscription {
 
     /**
      * cancelメソッドが呼び出された際に実行される関数
      */
-    private var _cancelCode: (NotifierSubscription) -> Unit ={}
+    private var _cancelCode: (NotifierSubscription) -> Unit = {}
 
     /**
      * requestメソッドが呼び出された際に実行される関数

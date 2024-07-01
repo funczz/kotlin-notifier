@@ -7,8 +7,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.*
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.ThreadPoolExecutor
 
 @Suppress("NonAsciiCharacters")
 class NotifierSubscriptionTest {
@@ -44,7 +44,7 @@ class NotifierSubscriptionTest {
 
     @BeforeEach
     fun beforeEach() {
-        executor = Executors.newCachedThreadPool() as ThreadPoolExecutor
+        executor = Executors.newCachedThreadPool()
         subscriber = ExSubscriber()
         subscription = DefaultNotifierSubscription(subscriber = subscriber, id = "/", executor = Optional.of(executor))
 
@@ -55,7 +55,7 @@ class NotifierSubscriptionTest {
         executor.shutdownNow()
     }
 
-    private lateinit var executor: ThreadPoolExecutor
+    private lateinit var executor: ExecutorService
 
     private lateinit var subscription: DefaultNotifierSubscription
 

@@ -1,8 +1,8 @@
 package com.github.funczz.kotlin.notifier
 
 import java.util.*
+import java.util.concurrent.Executor
 import java.util.concurrent.Flow
-import java.util.concurrent.ThreadPoolExecutor
 
 /**
  * Notifierイベントバスのサブスクリプション
@@ -23,7 +23,7 @@ interface NotifierSubscription : Flow.Subscription {
     /**
      * サブスクライバのonNextメソッドを投入するスレッドプール
      */
-    val executor: Optional<ThreadPoolExecutor>
+    val executor: Optional<Executor>
 
     /**
      * イベントバスから呼び出される

@@ -2,8 +2,8 @@ package com.github.funczz.kotlin.notifier
 
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executor
 import java.util.concurrent.Flow
-import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -40,7 +40,7 @@ class Notifier {
     fun subscribe(
         subscriber: Flow.Subscriber<in Any>,
         id: String,
-        executor: Optional<ThreadPoolExecutor> = Optional.empty()
+        executor: Optional<Executor> = Optional.empty()
     ): NotifierSubscription {
         val subscription = DefaultNotifierSubscription(
             subscriber = subscriber, id = id, executor = executor
@@ -63,6 +63,7 @@ class Notifier {
                     subscription.onCall(notifier = this)
                     subscription.subscriber.onSubscribe(subscription)
                 }
+
                 else -> {}
             }
         } catch (th: Throwable) {
