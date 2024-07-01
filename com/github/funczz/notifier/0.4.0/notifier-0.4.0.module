@@ -1,0 +1,73 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.github.funczz",
+    "module": "notifier",
+    "version": "0.4.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.1.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 11,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "files": [
+        {
+          "name": "notifier-0.4.0.jar",
+          "url": "notifier-0.4.0.jar",
+          "size": 15236,
+          "sha512": "1e636a9860106e912681f7022b17ffc643479edb3b74647d9ae7101652578009f51771bf99aed790f8f1332f0b1f527ecb79d5eb7178a63c4142268da223eee1",
+          "sha256": "ff5d52d7b5d9b454f8b2d61629b1af5e22014af086ef77001992e7a03d33b27b",
+          "sha1": "0bb31f37a458be13bcd6282ae1491528bfb17001",
+          "md5": "6dc896a7ed31d64657f9f0d04e1fb9c9"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 11,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.7.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "notifier-0.4.0.jar",
+          "url": "notifier-0.4.0.jar",
+          "size": 15236,
+          "sha512": "1e636a9860106e912681f7022b17ffc643479edb3b74647d9ae7101652578009f51771bf99aed790f8f1332f0b1f527ecb79d5eb7178a63c4142268da223eee1",
+          "sha256": "ff5d52d7b5d9b454f8b2d61629b1af5e22014af086ef77001992e7a03d33b27b",
+          "sha1": "0bb31f37a458be13bcd6282ae1491528bfb17001",
+          "md5": "6dc896a7ed31d64657f9f0d04e1fb9c9"
+        }
+      ]
+    }
+  ]
+}
