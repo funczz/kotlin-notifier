@@ -87,30 +87,11 @@ class Notifier {
     private val lock = ReentrantLock()
 
     /**
-     * サブスクライバをサブスクリプションのリストに加える
-     * @param subscriber アイテムを処理するサブスクライバ
-     * @param id サブスクリプションを識別する任意の文字列
-     * @param executor サブスクライバのonNextメソッドを投入するスレッドプール
-     * @return サブスクリプションを返却する
-     */
-    fun subscribe(
-        subscriber: Flow.Subscriber<in Any>,
-        id: String,
-        executor: Optional<Executor> = Optional.empty(),
-        async: Executor? = null
-    ): NotifierSubscription {
-        val subscription = DefaultNotifierSubscription(
-            subscriber = subscriber, id = id, executor = executor
-        )
-        subscribe(subscription = subscription, async = async)
-        return subscription
-    }
-
-    /**
      * サブスクリプションをリストに加える
      * @param subscription サブスクリプション
+     * @param executor subscribe処理するExecutor
      */
-    fun subscribe(subscription: NotifierSubscription, async: Executor? = null) = lock.withLock {
+    fun subscribe(subscription: NotifierSubscription, executor: Executor? = null) = lock.withLock {
         val runnable = Runnable {
             _subscribeFirst(subscription)
             try {
@@ -131,7 +112,7 @@ class Notifier {
                 _subscribeLast(subscription)
             }
         }
-        async?.execute(runnable) ?: runnable.run()
+        executor?.execute(runnable) ?: runnable.run()
     }
 
     /**
@@ -240,9 +221,9 @@ class Notifier {
      * idがマッチしたサブスクリプションのサブスクライバへアイテムを送信する
      * @param item アイテム
      * @param id idの正規表現
-     * @param async post処理するExecutor
+     * @param executor post処理するExecutor
      */
-    fun post(item: Any, id: Regex = Regex(".*"), async: Executor? = null) = lock.withLock {
+    fun post(item: Any, id: Regex = Regex(".*"), executor: Executor? = null) = lock.withLock {
         val runnable = Runnable {
             for (s in _subscriptions.filter { it.id.matches(regex = id) }) {
                 _postFirst(s)
@@ -261,7 +242,7 @@ class Notifier {
                 _postLast(s)
             }
         }
-        async?.execute(runnable) ?: runnable.run()
+        executor?.execute(runnable) ?: runnable.run()
     }
 
     private fun unsubscribePredicate(subscription: NotifierSubscription, throwable: Optional<Throwable>): Boolean {

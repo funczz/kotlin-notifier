@@ -21,7 +21,7 @@ class NotifierAsyncTest {
                 id = "async1-1",
                 executor = Optional.of(executor),
             ),
-            async = executor
+            executor = executor
         )
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
@@ -29,7 +29,7 @@ class NotifierAsyncTest {
                 id = "async1-2",
                 executor = Optional.of(executor)
             ),
-            async = executor
+            executor = executor
         )
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
@@ -37,17 +37,8 @@ class NotifierAsyncTest {
                 id = "async1-3",
                 executor = Optional.of(executor)
             ),
-            async = executor
+            executor = executor
         )
-        sleepMilliseconds()
-        assertEquals(3, notifier.subscriptions.size)
-    }
-
-    @Test
-    fun `subscribe - サブスクライバをsubscribeする`() {
-        notifier.subscribe(subscriber = ExSubscriber(), id = "async2-1", async = executor)
-        notifier.subscribe(subscriber = ExSubscriber(), id = "async2-2", async = executor)
-        notifier.subscribe(subscriber = ExSubscriber(), id = "async2-3", async = executor)
         sleepMilliseconds()
         assertEquals(3, notifier.subscriptions.size)
     }
@@ -55,16 +46,17 @@ class NotifierAsyncTest {
     @Test
     fun `post - 同期`() {
         val expected = "hello world."
-
         notifier.subscribe(
-            subscriber = subscriberSync,
-            id = "async3",
-            executor = Optional.empty(),
-            async = executor
+            subscription = DefaultNotifierSubscription(
+                subscriber = subscriberSync,
+                id = "async2",
+                executor = Optional.empty()
+            ),
+            executor = executor
         )
         sleepMilliseconds()
         assertEquals(1, notifier.subscriptions.size)
-        notifier.post(item = expected, async = executor)
+        notifier.post(item = expected, executor = executor)
         sleepMilliseconds()
         assertEquals(expected, subscriberSync.actual)
     }
@@ -74,14 +66,16 @@ class NotifierAsyncTest {
         val expected = "hello world."
 
         notifier.subscribe(
-            subscriber = subscriberAsync,
-            id = "async4",
-            executor = Optional.of(executor),
-            async = executor
+            subscription = DefaultNotifierSubscription(
+                subscriber = subscriberAsync,
+                id = "async3",
+                executor = Optional.of(executor)
+            ),
+            executor = executor
         )
         sleepMilliseconds()
         assertEquals(1, notifier.subscriptions.size)
-        notifier.post(item = expected, async = executor)
+        notifier.post(item = expected, executor = executor)
         sleepMilliseconds()
         assertEquals(expected, subscriberAsync.actual)
     }
@@ -91,14 +85,16 @@ class NotifierAsyncTest {
         val expected = ""
 
         notifier.subscribe(
-            subscriber = subscriberAsync,
-            id = "async5",
-            executor = Optional.of(executor),
-            async = executor
+            subscription = DefaultNotifierSubscription(
+                subscriber = subscriberAsync,
+                id = "async4",
+                executor = Optional.of(executor)
+            ),
+            executor = executor
         )
         sleepMilliseconds()
         assertEquals(1, notifier.subscriptions.size)
-        notifier.post(item = "CANCEL", async = executor)
+        notifier.post(item = "CANCEL", executor = executor)
         sleepMilliseconds()
         assertEquals(0, notifier.subscriptions.size)
         assertEquals(expected, subscriberAsync.actual)
@@ -109,14 +105,16 @@ class NotifierAsyncTest {
         val expected = Exception("ERROR.")
 
         notifier.subscribe(
-            subscriber = subscriberAsync,
-            id = "async6",
-            executor = Optional.of(executor),
-            async = executor
+            subscription = DefaultNotifierSubscription(
+                subscriber = subscriberAsync,
+                id = "async5",
+                executor = Optional.of(executor)
+            ),
+            executor = executor
         )
         sleepMilliseconds()
         assertEquals(1, notifier.subscriptions.size)
-        notifier.post(item = expected, async = executor)
+        notifier.post(item = expected, executor = executor)
         sleepMilliseconds()
         assertEquals(expected, subscriberAsync.error.get())
         assertEquals(0, notifier.subscriptions.size)
