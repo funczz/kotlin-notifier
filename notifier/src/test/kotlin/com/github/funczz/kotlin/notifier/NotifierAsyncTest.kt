@@ -127,49 +127,49 @@ class NotifierAsyncTest {
         subscriberSync = ExSubscriber()
         subscriptionSync = DefaultNotifierSubscription(subscriber = subscriberSync)
         notifier = Notifier()
-            .subscribeFirst {
+            .subscribeBefore {
                 logger.log(
                     Level.INFO,
                     "subscribe first: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
-            .subscribeLast {
+            .subscribeAfter {
                 logger.log(
                     Level.INFO,
                     "subscribe last: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
-            .unsubscribeFirst {
+            .unsubscribeBefore {
                 logger.log(
                     Level.INFO,
                     "unsubscribe first: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
-            .unsubscribeLast {
+            .unsubscribeAfter {
                 logger.log(
                     Level.INFO,
                     "unsubscribe last: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
-            .cancelFirst {
+            .cancelBefore {
                 logger.log(
                     Level.INFO,
                     "cancel first: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
-            .cancelLast {
+            .cancelAfter {
                 logger.log(
                     Level.INFO,
                     "cancel last: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
-            .postFirst {
+            .postBefore {
                 logger.log(
                     Level.INFO,
                     "post first: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
-            .postLast {
+            .postAfter {
                 logger.log(
                     Level.INFO,
                     "post last: thread=${Thread.currentThread().name}, id=${it.id}"

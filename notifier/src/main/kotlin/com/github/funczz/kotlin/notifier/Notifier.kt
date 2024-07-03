@@ -14,6 +14,11 @@ import kotlin.concurrent.withLock
 class Notifier {
 
     /**
+     * 更新処理を行う際のロック
+     */
+    private val lock = ReentrantLock()
+
+    /**
      * サブスクリプションのリスト
      */
     private val _subscriptions = CopyOnWriteArrayList<NotifierSubscription>()
@@ -25,66 +30,125 @@ class Notifier {
     val subscriptions: List<NotifierSubscription>
         get() = _subscriptions.toList()
 
-    private var _subscribeFirst: (NotifierSubscription) -> Unit = {}
+    /**
+     * subscribe前に実行する関数
+     */
+    private var _subscribeBefore: (NotifierSubscription) -> Unit = {}
 
-    private var _subscribeLast: (NotifierSubscription) -> Unit = {}
+    /**
+     * subscribe後に実行する関数
+     */
+    private var _subscribeAfter: (NotifierSubscription) -> Unit = {}
 
-    private var _unsubscribeFirst: (NotifierSubscription) -> Unit = {}
+    /**
+     * unsubscribe前に実行する関数
+     */
+    private var _unsubscribeBefore: (NotifierSubscription) -> Unit = {}
 
-    private var _unsubscribeLast: (NotifierSubscription) -> Unit = {}
+    /**
+     * unsubscribe後に実行する関数
+     */
+    private var _unsubscribeAfter: (NotifierSubscription) -> Unit = {}
 
-    private var _postFirst: (NotifierSubscription) -> Unit = {}
+    /**
+     * post前に実行する関数
+     */
+    private var _postBefore: (NotifierSubscription) -> Unit = {}
 
-    private var _postLast: (NotifierSubscription) -> Unit = {}
+    /**
+     * post後に実行する関数
+     */
+    private var _postAfter: (NotifierSubscription) -> Unit = {}
 
-    private var _cancelFirst: (NotifierSubscription) -> Unit = {}
+    /**
+     * cancel前に実行する関数
+     */
+    private var _cancelBefore: (NotifierSubscription) -> Unit = {}
 
-    private var _cancelLast: (NotifierSubscription) -> Unit = {}
+    /**
+     * cancel後に実行する関数
+     */
+    private var _cancelAfter: (NotifierSubscription) -> Unit = {}
 
-    fun subscribeFirst(function: (NotifierSubscription) -> Unit): Notifier {
-        _subscribeFirst = function
-        return this
-    }
-
-    fun subscribeLast(function: (NotifierSubscription) -> Unit): Notifier {
-        _subscribeLast = function
-        return this
-    }
-
-    fun unsubscribeFirst(function: (NotifierSubscription) -> Unit): Notifier {
-        _unsubscribeFirst = function
-        return this
-    }
-
-    fun unsubscribeLast(function: (NotifierSubscription) -> Unit): Notifier {
-        _unsubscribeLast = function
-        return this
-    }
-
-    fun postFirst(function: (NotifierSubscription) -> Unit): Notifier {
-        _postFirst = function
-        return this
-    }
-
-    fun postLast(function: (NotifierSubscription) -> Unit): Notifier {
-        _postLast = function
-        return this
-    }
-
-    fun cancelFirst(function: (NotifierSubscription) -> Unit): Notifier {
-        _cancelFirst = function
-        return this
-    }
-
-    fun cancelLast(function: (NotifierSubscription) -> Unit): Notifier {
-        _cancelLast = function
+    /**
+     * subscribe前に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun subscribeBefore(function: (NotifierSubscription) -> Unit): Notifier {
+        _subscribeBefore = function
         return this
     }
 
     /**
-     * 更新処理を行う際のロック
+     * subscribe後に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
      */
-    private val lock = ReentrantLock()
+    fun subscribeAfter(function: (NotifierSubscription) -> Unit): Notifier {
+        _subscribeAfter = function
+        return this
+    }
+
+    /**
+     * unsubscribe前に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun unsubscribeBefore(function: (NotifierSubscription) -> Unit): Notifier {
+        _unsubscribeBefore = function
+        return this
+    }
+
+    /**
+     * unsubscribe後に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun unsubscribeAfter(function: (NotifierSubscription) -> Unit): Notifier {
+        _unsubscribeAfter = function
+        return this
+    }
+
+    /**
+     * post前に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun postBefore(function: (NotifierSubscription) -> Unit): Notifier {
+        _postBefore = function
+        return this
+    }
+
+    /**
+     * post後に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun postAfter(function: (NotifierSubscription) -> Unit): Notifier {
+        _postAfter = function
+        return this
+    }
+
+    /**
+     * cancel前に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun cancelBefore(function: (NotifierSubscription) -> Unit): Notifier {
+        _cancelBefore = function
+        return this
+    }
+
+    /**
+     * cancel後に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun cancelAfter(function: (NotifierSubscription) -> Unit): Notifier {
+        _cancelAfter = function
+        return this
+    }
 
     /**
      * サブスクリプションをリストに加える
@@ -93,7 +157,7 @@ class Notifier {
      */
     fun subscribe(subscription: NotifierSubscription, executor: Executor? = null) = lock.withLock {
         val runnable = Runnable {
-            _subscribeFirst(subscription)
+            _subscribeBefore(subscription)
             try {
                 if (_subscriptions.any { it != subscription && it.subscriber == subscription.subscriber }) {
                     throw IllegalArgumentException("Duplicate subscriber.")
@@ -109,7 +173,7 @@ class Notifier {
             } catch (th: Throwable) {
                 unsubscribePredicate(subscription = subscription, throwable = Optional.ofNullable(th))
             } finally {
-                _subscribeLast(subscription)
+                _subscribeAfter(subscription)
             }
         }
         executor?.execute(runnable) ?: runnable.run()
@@ -226,7 +290,7 @@ class Notifier {
     fun post(item: Any, id: Regex = Regex(".*"), executor: Executor? = null) = lock.withLock {
         val runnable = Runnable {
             for (s in _subscriptions.filter { it.id.matches(regex = id) }) {
-                _postFirst(s)
+                _postBefore(s)
                 val runnable = Runnable {
                     try {
                         s.subscriber.onNext(item)
@@ -239,32 +303,32 @@ class Notifier {
                 } else {
                     runnable.run()
                 }
-                _postLast(s)
+                _postAfter(s)
             }
         }
         executor?.execute(runnable) ?: runnable.run()
     }
 
     private fun unsubscribePredicate(subscription: NotifierSubscription, throwable: Optional<Throwable>): Boolean {
-        _unsubscribeFirst(subscription)
+        _unsubscribeBefore(subscription)
         if (throwable.isPresent) {
             subscription.subscriber.onError(throwable.get())
         } else {
             subscription.subscriber.onComplete()
         }
         val result = cancel(subscription = subscription)
-        _unsubscribeLast(subscription)
+        _unsubscribeAfter(subscription)
         return result
     }
 
     private fun cancelPredicate(subscriptions: List<NotifierSubscription>): Int {
         var result = 0
         for (s in subscriptions) {
-            _cancelFirst(s)
+            _cancelBefore(s)
             if (_subscriptions.removeIf { it == s }) {
                 result += 1
             }
-            _cancelLast(s)
+            _cancelAfter(s)
         }
         return result
     }
