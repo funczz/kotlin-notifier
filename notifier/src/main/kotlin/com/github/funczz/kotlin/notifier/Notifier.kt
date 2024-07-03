@@ -182,58 +182,36 @@ class Notifier {
     /**
      * サブスクリプションをリストから削除する
      * @param subscription サブスクリプション
-     * @return リストから削除されたなら真を、それ以外は偽を返却する
+     * @param executor unsubscribe処理するExecutor
      */
-    fun unsubscribe(subscription: NotifierSubscription): Boolean = lock.withLock {
-        var result = false
-        for (s in _subscriptions.filter { it == subscription }) {
-            result = unsubscribePredicate(subscription = s, throwable = Optional.empty())
-            break
-        }
-        result
+    fun unsubscribe(subscription: NotifierSubscription, executor: Executor? = null) = lock.withLock {
+        unsubscribePredicate(subscriptions = _subscriptions.filter { it == subscription }, executor = executor)
     }
 
     /**
      * サブスクライバをリストから削除する
      * @param subscriber サブスクライバ
-     * @return リストから削除されたなら真を、それ以外は偽を返却する
+     * @param executor unsubscribe処理するExecutor
      */
-    fun unsubscribe(subscriber: Flow.Subscriber<in Any>): Boolean = lock.withLock {
-        var result = false
-        for (s in _subscriptions.filter { it.subscriber == subscriber }) {
-            result = unsubscribePredicate(subscription = s, throwable = Optional.empty())
-            break
-        }
-        result
+    fun unsubscribe(subscriber: Flow.Subscriber<in Any>, executor: Executor? = null) = lock.withLock {
+        unsubscribePredicate(subscriptions = _subscriptions.filter { it.subscriber == subscriber }, executor = executor)
     }
 
     /**
      * サブスクリプションをリストから削除する
      * @param id 対象を抽出するidの正規表現
-     * @return 削除されたサブスクリプションの個数を返却する
+     * @param executor unsubscribe処理するExecutor
      */
-    fun unsubscribe(id: Regex): Int = lock.withLock {
-        var result = 0
-        for (s in _subscriptions.filter { it.id.matches(id) }) {
-            if (unsubscribePredicate(subscription = s, throwable = Optional.empty())) {
-                result += 1
-            }
-        }
-        result
+    fun unsubscribe(id: Regex, executor: Executor? = null) = lock.withLock {
+        unsubscribePredicate(subscriptions = _subscriptions.filter { it.id.matches(id) }, executor = executor)
     }
 
     /**
      * 全てのサブスクリプションをリストから削除する
-     * @return 削除されたサブスクリプションの個数を返却する
+     * @param executor unsubscribe処理するExecutor
      */
-    fun unsubscribeAll(): Int = lock.withLock {
-        var result = 0
-        for (s in _subscriptions.toList()) {
-            if (unsubscribePredicate(subscription = s, throwable = Optional.empty())) {
-                result += 1
-            }
-        }
-        result
+    fun unsubscribeAll(executor: Executor? = null) = lock.withLock {
+        unsubscribePredicate(subscriptions = _subscriptions.toList(), executor = executor)
     }
 
     /**
@@ -242,43 +220,42 @@ class Notifier {
      * @param subscription サブスクリプション
      */
     fun onCancel(subscription: NotifierSubscription) {
-        cancel(subscription = subscription)
+        cancel(subscription = subscription, executor = null)
     }
 
     /**
      * サブスクリプションをリストから削除するが、サブスクライバに対しては何も操作を行わない
      * @param subscription サブスクリプション
-     * @return リストから削除されたなら真を、それ以外は偽を返却する
+     * @param executor cancel処理するExecutor
      */
-    fun cancel(subscription: NotifierSubscription): Boolean = lock.withLock {
-        val counter = cancelPredicate(subscriptions = _subscriptions.filter { it == subscription })
-        counter > 0
+    fun cancel(subscription: NotifierSubscription, executor: Executor? = null) = lock.withLock {
+        cancelPredicate(subscriptions = _subscriptions.filter { it == subscription }, executor = executor)
     }
 
     /**
      * サブスクリプションをリストから削除するが、サブスクライバに対しては何も操作を行わない
      * @param subscriber サブスクライバ
-     * @return リストから削除されたなら真を、それ以外は偽を返却する
+     * @param executor cancel処理するExecutor
      */
-    fun cancel(subscriber: Flow.Subscriber<in Any>): Boolean = lock.withLock {
-        val counter = cancelPredicate(subscriptions = _subscriptions.filter { it.subscriber == subscriber })
-        counter > 0
+    fun cancel(subscriber: Flow.Subscriber<in Any>, executor: Executor? = null) = lock.withLock {
+        cancelPredicate(subscriptions = _subscriptions.filter { it.subscriber == subscriber }, executor = executor)
     }
 
     /**
      * サブスクリプションをリストから削除するが、サブスクライバに対しては何も操作を行わない
      * @param id idの正規表現
-     * @return 削除されたサブスクリプションの個数を返却する
+     * @param executor cancel処理するExecutor
      */
-    fun cancel(id: Regex): Int = lock.withLock {
-        cancelPredicate(subscriptions = _subscriptions.filter { it.id.matches(id) })
+    fun cancel(id: Regex, executor: Executor? = null) = lock.withLock {
+        cancelPredicate(subscriptions = _subscriptions.filter { it.id.matches(id) }, executor = executor)
     }
 
     /**
      * 全てのサブスクリプションをリストから削除するが、サブスクライバに対しては何も操作を行わない
+     * @param executor cancel処理するExecutor
      */
-    fun cancelAll(): Int = lock.withLock {
-        cancelPredicate(subscriptions = _subscriptions.toList())
+    fun cancelAll(executor: Executor? = null) = lock.withLock {
+        cancelPredicate(subscriptions = _subscriptions.toList(), executor = executor)
     }
 
     /**
@@ -309,28 +286,35 @@ class Notifier {
         executor?.execute(runnable) ?: runnable.run()
     }
 
-    private fun unsubscribePredicate(subscription: NotifierSubscription, throwable: Optional<Throwable>): Boolean {
+    private fun unsubscribePredicate(subscriptions: List<NotifierSubscription>, executor: Executor?) {
+        val runnable = Runnable {
+            for (s in subscriptions) {
+                unsubscribePredicate(subscription = s, throwable = Optional.empty())
+            }
+        }
+        executor?.execute(runnable) ?: runnable.run()
+    }
+
+    private fun unsubscribePredicate(subscription: NotifierSubscription, throwable: Optional<Throwable>) {
         _unsubscribeBefore(subscription)
         if (throwable.isPresent) {
             subscription.subscriber.onError(throwable.get())
         } else {
             subscription.subscriber.onComplete()
         }
-        val result = cancel(subscription = subscription)
+        cancel(subscription = subscription)
         _unsubscribeAfter(subscription)
-        return result
     }
 
-    private fun cancelPredicate(subscriptions: List<NotifierSubscription>): Int {
-        var result = 0
-        for (s in subscriptions) {
-            _cancelBefore(s)
-            if (_subscriptions.removeIf { it == s }) {
-                result += 1
+    private fun cancelPredicate(subscriptions: List<NotifierSubscription>, executor: Executor?) {
+        val runnable = Runnable {
+            for (s in subscriptions) {
+                _cancelBefore(s)
+                _subscriptions.removeIf { it == s }
+                _cancelAfter(s)
             }
-            _cancelAfter(s)
         }
-        return result
+        executor?.execute(runnable) ?: runnable.run()
     }
 
     companion object {

@@ -44,6 +44,140 @@ class NotifierAsyncTest {
     }
 
     @Test
+    fun `unsubscribe - サブスクリプションをunsubscribeする`() {
+        notifier.subscribe(subscription = subscriptionAsync)
+        sleepMilliseconds()
+        assertEquals(1, notifier.subscriptions.size)
+        notifier.unsubscribe(subscription = subscriptionAsync, executor = executor)
+        sleepMilliseconds()
+        assertEquals(0, notifier.subscriptions.size)
+        assertEquals("complete", subscriberAsync.actual)
+    }
+
+    @Test
+    fun `unsubscribe - サブスクライバをunsubscribeする`() {
+        notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = subscriberAsync,
+                executor = Optional.of(executor)
+            )
+        )
+        sleepMilliseconds()
+        assertEquals(1, notifier.subscriptions.size)
+        notifier.unsubscribe(subscriber = subscriberAsync, executor = executor)
+        sleepMilliseconds()
+        assertEquals(0, notifier.subscriptions.size)
+        assertEquals("complete", subscriberAsync.actual)
+    }
+
+    @Test
+    fun `unsubscribe - id がマッチする場合はサブスクリプションをunsubscribeする`() {
+        notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = subscriberAsync,
+                id = "foo",
+                executor = Optional.of(executor)
+            )
+        )
+        notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = subscriberSync,
+                id = "foo",
+                executor = Optional.empty()
+            )
+        )
+        sleepMilliseconds()
+        assertEquals(2, notifier.subscriptions.size)
+        notifier.unsubscribe(id = Regex("^foo"), executor = executor)
+        sleepMilliseconds()
+        assertEquals(0, notifier.subscriptions.size)
+        assertEquals("complete", subscriberAsync.actual)
+    }
+
+    @Test
+    fun `unsubscribeAll - サブスクリプションを全てunsubscribeする`() {
+        notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = subscriberAsync,
+                executor = Optional.of(executor)
+            )
+        )
+        notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = ExSubscriber(),
+                executor = Optional.of(executor)
+            )
+        )
+        notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = ExSubscriber(),
+                executor = Optional.of(executor)
+            )
+        )
+        sleepMilliseconds()
+        assertEquals(3, notifier.subscriptions.size)
+        notifier.unsubscribeAll(executor = executor)
+        sleepMilliseconds()
+        assertEquals(0, notifier.subscriptions.size)
+        assertEquals("complete", subscriberAsync.actual)
+    }
+
+    @Test
+    fun `cancel - サブスクリプションをキャンセルする`() {
+        notifier.subscribe(subscription = subscriptionAsync)
+        sleepMilliseconds()
+        assertEquals(1, notifier.subscriptions.size)
+        notifier.cancel(subscription = subscriptionAsync, executor = executor)
+        sleepMilliseconds()
+        assertEquals(0, notifier.subscriptions.size)
+        assertEquals("", subscriberAsync.actual)
+    }
+
+    @Test
+    fun `cancel - サブスクライバをキャンセルする`() {
+        notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = subscriberAsync,
+                executor = Optional.of(executor)
+            )
+        )
+        sleepMilliseconds()
+        assertEquals(1, notifier.subscriptions.size)
+        notifier.cancel(subscriber = subscriberAsync, executor = executor)
+        sleepMilliseconds()
+        assertEquals(0, notifier.subscriptions.size)
+        assertEquals("", subscriberAsync.actual)
+    }
+
+    @Test
+    fun `cancelAll - サブスクリプションを全てキャンセルする`() {
+        notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = subscriberAsync,
+                executor = Optional.of(executor)
+            )
+        )
+        notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = ExSubscriber(),
+                executor = Optional.of(executor)
+            )
+        )
+        notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = ExSubscriber(),
+                executor = Optional.of(executor)
+            )
+        )
+        sleepMilliseconds()
+        assertEquals(3, notifier.subscriptions.size)
+        notifier.cancelAll(executor = executor)
+        sleepMilliseconds()
+        assertEquals(0, notifier.subscriptions.size)
+        assertEquals("", subscriberAsync.actual)
+    }
+
+    @Test
     fun `post - 同期`() {
         val expected = "hello world."
         notifier.subscribe(
