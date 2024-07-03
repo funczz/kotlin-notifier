@@ -25,6 +25,62 @@ class Notifier {
     val subscriptions: List<NotifierSubscription>
         get() = _subscriptions.toList()
 
+    private var _subscribeFirst: (NotifierSubscription) -> Unit = {}
+
+    private var _subscribeLast: (NotifierSubscription) -> Unit = {}
+
+    private var _unsubscribeFirst: (NotifierSubscription) -> Unit = {}
+
+    private var _unsubscribeLast: (NotifierSubscription) -> Unit = {}
+
+    private var _postFirst: (NotifierSubscription) -> Unit = {}
+
+    private var _postLast: (NotifierSubscription) -> Unit = {}
+
+    private var _cancelFirst: (NotifierSubscription) -> Unit = {}
+
+    private var _cancelLast: (NotifierSubscription) -> Unit = {}
+
+    fun subscribeFirst(function: (NotifierSubscription) -> Unit): Notifier {
+        _subscribeFirst = function
+        return this
+    }
+
+    fun subscribeLast(function: (NotifierSubscription) -> Unit): Notifier {
+        _subscribeLast = function
+        return this
+    }
+
+    fun unsubscribeFirst(function: (NotifierSubscription) -> Unit): Notifier {
+        _unsubscribeFirst = function
+        return this
+    }
+
+    fun unsubscribeLast(function: (NotifierSubscription) -> Unit): Notifier {
+        _unsubscribeLast = function
+        return this
+    }
+
+    fun postFirst(function: (NotifierSubscription) -> Unit): Notifier {
+        _postFirst = function
+        return this
+    }
+
+    fun postLast(function: (NotifierSubscription) -> Unit): Notifier {
+        _postLast = function
+        return this
+    }
+
+    fun cancelFirst(function: (NotifierSubscription) -> Unit): Notifier {
+        _cancelFirst = function
+        return this
+    }
+
+    fun cancelLast(function: (NotifierSubscription) -> Unit): Notifier {
+        _cancelLast = function
+        return this
+    }
+
     /**
      * 更新処理を行う際のロック
      */
@@ -54,6 +110,7 @@ class Notifier {
      * @param subscription サブスクリプション
      */
     fun subscribe(subscription: NotifierSubscription) = lock.withLock {
+        _subscribeFirst(subscription)
         try {
             if (_subscriptions.any { it != subscription && it.subscriber == subscription.subscriber }) {
                 throw IllegalArgumentException("Duplicate subscriber.")
@@ -68,6 +125,8 @@ class Notifier {
             }
         } catch (th: Throwable) {
             unsubscribePredicate(subscription = subscription, throwable = Optional.ofNullable(th))
+        } finally {
+            _subscribeLast(subscription)
         }
     }
 
@@ -143,7 +202,8 @@ class Notifier {
      * @return リストから削除されたなら真を、それ以外は偽を返却する
      */
     fun cancel(subscription: NotifierSubscription): Boolean = lock.withLock {
-        return _subscriptions.removeIf { it == subscription }
+        val counter = cancelPredicate(subscriptions = _subscriptions.filter { it == subscription })
+        counter > 0
     }
 
     /**
@@ -152,7 +212,8 @@ class Notifier {
      * @return リストから削除されたなら真を、それ以外は偽を返却する
      */
     fun cancel(subscriber: Flow.Subscriber<in Any>): Boolean = lock.withLock {
-        return _subscriptions.removeIf { it.subscriber == subscriber }
+        val counter = cancelPredicate(subscriptions = _subscriptions.filter { it.subscriber == subscriber })
+        counter > 0
     }
 
     /**
@@ -161,26 +222,14 @@ class Notifier {
      * @return 削除されたサブスクリプションの個数を返却する
      */
     fun cancel(id: Regex): Int = lock.withLock {
-        var result = 0
-        for (s in _subscriptions.filter { it.id.matches(id) }) {
-            if (_subscriptions.removeIf { it == s }) {
-                result += 1
-            }
-        }
-        return result
+        cancelPredicate(subscriptions = _subscriptions.filter { it.id.matches(id) })
     }
 
     /**
      * 全てのサブスクリプションをリストから削除するが、サブスクライバに対しては何も操作を行わない
      */
     fun cancelAll(): Int = lock.withLock {
-        var result = 0
-        for (s in _subscriptions.toList()) {
-            if (_subscriptions.removeIf { it == s }) {
-                result += 1
-            }
-        }
-        result
+        cancelPredicate(subscriptions = _subscriptions.toList())
     }
 
     /**
@@ -190,6 +239,7 @@ class Notifier {
      */
     fun post(item: Any, id: Regex = Regex(".*")) = lock.withLock {
         for (s in _subscriptions.filter { it.id.matches(regex = id) }) {
+            _postFirst(s)
             val runnable = Runnable {
                 try {
                     s.subscriber.onNext(item)
@@ -202,16 +252,32 @@ class Notifier {
             } else {
                 runnable.run()
             }
+            _postLast(s)
         }
     }
 
     private fun unsubscribePredicate(subscription: NotifierSubscription, throwable: Optional<Throwable>): Boolean {
+        _unsubscribeFirst(subscription)
         if (throwable.isPresent) {
             subscription.subscriber.onError(throwable.get())
         } else {
             subscription.subscriber.onComplete()
         }
-        return cancel(subscription = subscription)
+        val result = cancel(subscription = subscription)
+        _unsubscribeLast(subscription)
+        return result
+    }
+
+    private fun cancelPredicate(subscriptions: List<NotifierSubscription>): Int {
+        var result = 0
+        for (s in subscriptions) {
+            _cancelFirst(s)
+            if (_subscriptions.removeIf { it == s }) {
+                result += 1
+            }
+            _cancelLast(s)
+        }
+        return result
     }
 
     companion object {
@@ -221,6 +287,7 @@ class Notifier {
         /**
          * Notifierのシングルトン
          */
+        @Suppress("Unused")
         @JvmStatic
         fun getDefault() = instance ?: synchronized(this) {
             instance ?: Notifier().also {

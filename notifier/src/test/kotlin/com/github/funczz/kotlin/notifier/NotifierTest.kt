@@ -1,5 +1,6 @@
 package com.github.funczz.kotlin.notifier
 
+import com.github.funczz.kotlin.getJULLogger
 import com.github.funczz.kotlin.notifier.ex.ExSubscriber
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -7,6 +8,7 @@ import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.logging.Level
 
 @Suppress("NonAsciiCharacters")
 class NotifierTest {
@@ -285,6 +287,54 @@ class NotifierTest {
         subscriberSync = ExSubscriber()
         subscriptionSync = DefaultNotifierSubscription(subscriber = subscriberSync)
         notifier = Notifier()
+            .subscribeFirst {
+                logger.log(
+                    Level.INFO,
+                    "subscribe first: thread=${Thread.currentThread().name}, id=${it.id}"
+                )
+            }
+            .subscribeLast {
+                logger.log(
+                    Level.INFO,
+                    "subscribe last: thread=${Thread.currentThread().name}, id=${it.id}"
+                )
+            }
+            .unsubscribeFirst {
+                logger.log(
+                    Level.INFO,
+                    "unsubscribe first: thread=${Thread.currentThread().name}, id=${it.id}"
+                )
+            }
+            .unsubscribeLast {
+                logger.log(
+                    Level.INFO,
+                    "unsubscribe last: thread=${Thread.currentThread().name}, id=${it.id}"
+                )
+            }
+            .cancelFirst {
+                logger.log(
+                    Level.INFO,
+                    "cancel first: thread=${Thread.currentThread().name}, id=${it.id}"
+                )
+            }
+            .cancelLast {
+                logger.log(
+                    Level.INFO,
+                    "cancel last: thread=${Thread.currentThread().name}, id=${it.id}"
+                )
+            }
+            .postFirst {
+                logger.log(
+                    Level.INFO,
+                    "post first: thread=${Thread.currentThread().name}, id=${it.id}"
+                )
+            }
+            .postLast {
+                logger.log(
+                    Level.INFO,
+                    "post last: thread=${Thread.currentThread().name}, id=${it.id}"
+                )
+            }
     }
 
     @AfterEach
@@ -307,6 +357,8 @@ class NotifierTest {
     private lateinit var notifier: Notifier
 
     companion object {
+
+        private val logger = NotifierSubscriptionTest::class.java.getJULLogger()
 
         private lateinit var executor: ThreadPoolExecutor
 
