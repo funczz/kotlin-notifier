@@ -393,49 +393,49 @@ class NotifierTest {
             .subscribeBefore {
                 logger.log(
                     Level.INFO,
-                    "subscribe first: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Subscribe Before: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
             .subscribeAfter {
                 logger.log(
                     Level.INFO,
-                    "subscribe last: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Subscribe After: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
             .unsubscribeBefore {
                 logger.log(
                     Level.INFO,
-                    "unsubscribe first: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Unsubscribe Before: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
             .unsubscribeAfter {
                 logger.log(
                     Level.INFO,
-                    "unsubscribe last: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Unsubscribe After: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
             .cancelBefore {
                 logger.log(
                     Level.INFO,
-                    "cancel first: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Cancel Before: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
             .cancelAfter {
                 logger.log(
                     Level.INFO,
-                    "cancel last: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Cancel After: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
             .postBefore {
                 logger.log(
                     Level.INFO,
-                    "post first: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Post Before: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
             .postAfter {
                 logger.log(
                     Level.INFO,
-                    "post last: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Post After: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
     }
