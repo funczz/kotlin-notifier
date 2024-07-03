@@ -14,6 +14,11 @@ import kotlin.concurrent.withLock
 class Notifier {
 
     /**
+     * 更新処理を行う際のロック
+     */
+    private val lock = ReentrantLock()
+
+    /**
      * サブスクリプションのリスト
      */
     private val _subscriptions = CopyOnWriteArrayList<NotifierSubscription>()
@@ -26,49 +31,152 @@ class Notifier {
         get() = _subscriptions.toList()
 
     /**
-     * 更新処理を行う際のロック
+     * subscribe前に実行する関数
      */
-    private val lock = ReentrantLock()
+    private var _subscribeBefore: (NotifierSubscription) -> Unit = {}
 
     /**
-     * サブスクライバをサブスクリプションのリストに加える
-     * @param subscriber アイテムを処理するサブスクライバ
-     * @param id サブスクリプションを識別する任意の文字列
-     * @param executor サブスクライバのonNextメソッドを投入するスレッドプール
-     * @return サブスクリプションを返却する
+     * subscribe後に実行する関数
      */
-    fun subscribe(
-        subscriber: Flow.Subscriber<in Any>,
-        id: String,
-        executor: Optional<Executor> = Optional.empty()
-    ): NotifierSubscription {
-        val subscription = DefaultNotifierSubscription(
-            subscriber = subscriber, id = id, executor = executor
-        )
-        subscribe(subscription = subscription)
-        return subscription
+    private var _subscribeAfter: (NotifierSubscription) -> Unit = {}
+
+    /**
+     * unsubscribe前に実行する関数
+     */
+    private var _unsubscribeBefore: (NotifierSubscription) -> Unit = {}
+
+    /**
+     * unsubscribe後に実行する関数
+     */
+    private var _unsubscribeAfter: (NotifierSubscription) -> Unit = {}
+
+    /**
+     * post前に実行する関数
+     */
+    private var _postBefore: (NotifierSubscription) -> Unit = {}
+
+    /**
+     * post後に実行する関数
+     */
+    private var _postAfter: (NotifierSubscription) -> Unit = {}
+
+    /**
+     * cancel前に実行する関数
+     */
+    private var _cancelBefore: (NotifierSubscription) -> Unit = {}
+
+    /**
+     * cancel後に実行する関数
+     */
+    private var _cancelAfter: (NotifierSubscription) -> Unit = {}
+
+    /**
+     * subscribe前に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun subscribeBefore(function: (NotifierSubscription) -> Unit): Notifier {
+        _subscribeBefore = function
+        return this
+    }
+
+    /**
+     * subscribe後に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun subscribeAfter(function: (NotifierSubscription) -> Unit): Notifier {
+        _subscribeAfter = function
+        return this
+    }
+
+    /**
+     * unsubscribe前に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun unsubscribeBefore(function: (NotifierSubscription) -> Unit): Notifier {
+        _unsubscribeBefore = function
+        return this
+    }
+
+    /**
+     * unsubscribe後に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun unsubscribeAfter(function: (NotifierSubscription) -> Unit): Notifier {
+        _unsubscribeAfter = function
+        return this
+    }
+
+    /**
+     * post前に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun postBefore(function: (NotifierSubscription) -> Unit): Notifier {
+        _postBefore = function
+        return this
+    }
+
+    /**
+     * post後に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun postAfter(function: (NotifierSubscription) -> Unit): Notifier {
+        _postAfter = function
+        return this
+    }
+
+    /**
+     * cancel前に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun cancelBefore(function: (NotifierSubscription) -> Unit): Notifier {
+        _cancelBefore = function
+        return this
+    }
+
+    /**
+     * cancel後に実行する関数を代入する
+     * @param function 関数
+     * @return Notifier
+     */
+    fun cancelAfter(function: (NotifierSubscription) -> Unit): Notifier {
+        _cancelAfter = function
+        return this
     }
 
     /**
      * サブスクリプションをリストに加える
      * @param subscription サブスクリプション
+     * @param executor subscribe処理するExecutor
      */
-    fun subscribe(subscription: NotifierSubscription) = lock.withLock {
-        try {
-            if (_subscriptions.any { it != subscription && it.subscriber == subscription.subscriber }) {
-                throw IllegalArgumentException("Duplicate subscriber.")
-            }
-            when (_subscriptions.addIfAbsent(subscription)) {
-                true -> {
-                    subscription.onCall(notifier = this)
-                    subscription.subscriber.onSubscribe(subscription)
+    fun subscribe(subscription: NotifierSubscription, executor: Executor? = null) = lock.withLock {
+        val runnable = Runnable {
+            _subscribeBefore(subscription)
+            try {
+                if (_subscriptions.any { it != subscription && it.subscriber == subscription.subscriber }) {
+                    throw IllegalArgumentException("Duplicate subscriber.")
                 }
+                when (_subscriptions.addIfAbsent(subscription)) {
+                    true -> {
+                        subscription.onCall(notifier = this)
+                        subscription.subscriber.onSubscribe(subscription)
+                    }
 
-                else -> {}
+                    else -> {}
+                }
+            } catch (th: Throwable) {
+                unsubscribePredicate(subscription = subscription, throwable = Optional.ofNullable(th))
+            } finally {
+                _subscribeAfter(subscription)
             }
-        } catch (th: Throwable) {
-            unsubscribePredicate(subscription = subscription, throwable = Optional.ofNullable(th))
         }
+        executor?.execute(runnable) ?: runnable.run()
     }
 
     /**
@@ -143,7 +251,8 @@ class Notifier {
      * @return リストから削除されたなら真を、それ以外は偽を返却する
      */
     fun cancel(subscription: NotifierSubscription): Boolean = lock.withLock {
-        return _subscriptions.removeIf { it == subscription }
+        val counter = cancelPredicate(subscriptions = _subscriptions.filter { it == subscription })
+        counter > 0
     }
 
     /**
@@ -152,7 +261,8 @@ class Notifier {
      * @return リストから削除されたなら真を、それ以外は偽を返却する
      */
     fun cancel(subscriber: Flow.Subscriber<in Any>): Boolean = lock.withLock {
-        return _subscriptions.removeIf { it.subscriber == subscriber }
+        val counter = cancelPredicate(subscriptions = _subscriptions.filter { it.subscriber == subscriber })
+        counter > 0
     }
 
     /**
@@ -161,57 +271,66 @@ class Notifier {
      * @return 削除されたサブスクリプションの個数を返却する
      */
     fun cancel(id: Regex): Int = lock.withLock {
-        var result = 0
-        for (s in _subscriptions.filter { it.id.matches(id) }) {
-            if (_subscriptions.removeIf { it == s }) {
-                result += 1
-            }
-        }
-        return result
+        cancelPredicate(subscriptions = _subscriptions.filter { it.id.matches(id) })
     }
 
     /**
      * 全てのサブスクリプションをリストから削除するが、サブスクライバに対しては何も操作を行わない
      */
     fun cancelAll(): Int = lock.withLock {
-        var result = 0
-        for (s in _subscriptions.toList()) {
-            if (_subscriptions.removeIf { it == s }) {
-                result += 1
-            }
-        }
-        result
+        cancelPredicate(subscriptions = _subscriptions.toList())
     }
 
     /**
      * idがマッチしたサブスクリプションのサブスクライバへアイテムを送信する
      * @param item アイテム
      * @param id idの正規表現
+     * @param executor post処理するExecutor
      */
-    fun post(item: Any, id: Regex = Regex(".*")) = lock.withLock {
-        for (s in _subscriptions.filter { it.id.matches(regex = id) }) {
-            val runnable = Runnable {
-                try {
-                    s.subscriber.onNext(item)
-                } catch (th: Throwable) {
-                    unsubscribePredicate(subscription = s, throwable = Optional.ofNullable(th))
+    fun post(item: Any, id: Regex = Regex(".*"), executor: Executor? = null) = lock.withLock {
+        val runnable = Runnable {
+            for (s in _subscriptions.filter { it.id.matches(regex = id) }) {
+                _postBefore(s)
+                val runnable = Runnable {
+                    try {
+                        s.subscriber.onNext(item)
+                    } catch (th: Throwable) {
+                        unsubscribePredicate(subscription = s, throwable = Optional.ofNullable(th))
+                    }
                 }
-            }
-            if (s.executor.isPresent) {
-                s.executor.get().execute(runnable)
-            } else {
-                runnable.run()
+                if (s.executor.isPresent) {
+                    s.executor.get().execute(runnable)
+                } else {
+                    runnable.run()
+                }
+                _postAfter(s)
             }
         }
+        executor?.execute(runnable) ?: runnable.run()
     }
 
     private fun unsubscribePredicate(subscription: NotifierSubscription, throwable: Optional<Throwable>): Boolean {
+        _unsubscribeBefore(subscription)
         if (throwable.isPresent) {
             subscription.subscriber.onError(throwable.get())
         } else {
             subscription.subscriber.onComplete()
         }
-        return cancel(subscription = subscription)
+        val result = cancel(subscription = subscription)
+        _unsubscribeAfter(subscription)
+        return result
+    }
+
+    private fun cancelPredicate(subscriptions: List<NotifierSubscription>): Int {
+        var result = 0
+        for (s in subscriptions) {
+            _cancelBefore(s)
+            if (_subscriptions.removeIf { it == s }) {
+                result += 1
+            }
+            _cancelAfter(s)
+        }
+        return result
     }
 
     companion object {
@@ -221,6 +340,7 @@ class Notifier {
         /**
          * Notifierのシングルトン
          */
+        @Suppress("Unused")
         @JvmStatic
         fun getDefault() = instance ?: synchronized(this) {
             instance ?: Notifier().also {
