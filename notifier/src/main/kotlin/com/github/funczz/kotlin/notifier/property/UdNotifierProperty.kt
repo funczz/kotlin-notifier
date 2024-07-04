@@ -7,7 +7,7 @@ import java.util.concurrent.Executor
  * 代入された値をNotifierでpostするプロパティの実装
  * @author funczz
  */
-open class UdNotifierProperty<V>(
+open class UdNotifierProperty<V : Any>(
 
     /**
      * 初期値

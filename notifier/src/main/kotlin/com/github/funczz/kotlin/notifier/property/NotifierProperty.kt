@@ -7,7 +7,7 @@ import java.util.concurrent.Executor
  * 代入された値をNotifierでpostするプロパティのインターフェイス
  * @author funczz
  */
-interface NotifierProperty<V> {
+interface NotifierProperty<V : Any> {
 
     val notifier: Notifier
 
