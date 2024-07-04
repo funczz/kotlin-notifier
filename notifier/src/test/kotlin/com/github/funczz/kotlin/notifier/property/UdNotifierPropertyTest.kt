@@ -1,114 +1,101 @@
 package com.github.funczz.kotlin.notifier.property
 
 import com.github.funczz.kotlin.getJULLogger
+import com.github.funczz.kotlin.notifier.DefaultNotifierSubscription
 import com.github.funczz.kotlin.notifier.Notifier
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
+import java.util.*
 import java.util.concurrent.Executors
+import java.util.concurrent.Flow
+import java.util.concurrent.Flow.Subscriber
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 
-class NotifierPropertyTest {
+@Suppress("NonAsciiCharacters")
+class UdNotifierPropertyTest {
+
 
     @Test
-    fun int() {
-        val expected = 10
+    fun `getValue 値を取得する`() {
+        val expected = "hello world."
 
-        var actual = 0
-        val prop = NotifierProperty(
-            initialValue = 0,
-            id = "prop",
-            executor = executor
-        ).onNext {
-            actual = it
-        }
-        prop.subscribe(
-            notifier = notifier
+        val actual: String
+        val prop = UdNotifierProperty(
+            initialValue = expected,
+            notifier = notifier,
         )
-        sleepMilliseconds()
-        notifier.post(item = expected, id = "prop".toRegex(), executor = executor)
+        actual = prop.getValue()
         sleepMilliseconds()
         assertEquals(expected, actual)
     }
 
     @Test
-    fun string() {
+    fun `setValue 保持する値と異なる値を代入するとpostされる`() {
         val expected = "hello world."
 
         var actual = ""
-        val prop = NotifierProperty(
-            initialValue = "",
-            id = "prop",
-            executor = executor
-        ).onNext {
-            actual = it
-        }
-        prop.subscribe(
-            notifier = notifier
+        val prop = UdNotifierProperty(
+            initialValue = "Hello World!",
+            notifier = notifier,
+        )
+        prop.notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = UdSubscriber<String> { actual = it },
+                id = "prop",
+                executor = Optional.of(executor)
+            )
         )
         sleepMilliseconds()
-        notifier.post(item = expected, id = "prop".toRegex(), executor = executor)
+        prop.setValue(value = expected)
         sleepMilliseconds()
         assertEquals(expected, actual)
     }
 
     @Test
-    fun list() {
-        val expected = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+    fun `setValue 保持する値と同一の値を代入するとpostされない`() {
+        val expected = "hello world."
 
-        val actual = mutableListOf<Int>()
-        val prop = NotifierProperty(
-            initialValue = listOf<Int>(),
-            id = "prop",
-            executor = executor
-        ).onNext {
-            actual.addAll(it)
-        }
-        prop.subscribe(
-            notifier = notifier
+        var actual = ""
+        val prop = UdNotifierProperty(
+            initialValue = expected,
+            notifier = notifier,
+        )
+        prop.notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = UdSubscriber<String> { actual = it },
+                id = "prop",
+                executor = Optional.of(executor)
+            )
         )
         sleepMilliseconds()
-        notifier.post(item = expected, id = "prop".toRegex(), executor = executor)
+        prop.setValue(value = expected)
+        sleepMilliseconds()
+        assertEquals("", actual)
+    }
+
+
+    @Test
+    fun `postValue 値がpostされる`() {
+        val expected = "hello world."
+
+        var actual = ""
+        val prop = UdNotifierProperty(
+            initialValue = expected,
+            notifier = notifier,
+        )
+        prop.notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = UdSubscriber<String> { actual = it },
+                id = "prop",
+                executor = Optional.of(executor)
+            )
+        )
+        sleepMilliseconds()
+        prop.postValue()
         sleepMilliseconds()
         assertEquals(expected, actual)
-    }
-
-    @Test
-    fun unsubscribe() {
-        val prop = NotifierProperty(
-            initialValue = "",
-            id = "prop",
-            executor = executor
-        )
-        prop.subscribe(
-            notifier = notifier
-        )
-        sleepMilliseconds()
-        assertEquals(1, notifier.subscriptions.size)
-
-        prop.unsubscribe()
-        sleepMilliseconds()
-        assertEquals(0, notifier.subscriptions.size)
-    }
-
-
-    @Test
-    fun cancel() {
-        val prop = NotifierProperty(
-            initialValue = "",
-            id = "prop",
-            executor = executor
-        )
-        prop.subscribe(
-            notifier = notifier
-        )
-        sleepMilliseconds()
-        assertEquals(1, notifier.subscriptions.size)
-
-        prop.cancel()
-        sleepMilliseconds()
-        assertEquals(0, notifier.subscriptions.size)
     }
 
     @BeforeEach
@@ -177,7 +164,7 @@ class NotifierPropertyTest {
 
     companion object {
 
-        private val logger = NotifierPropertyTest::class.java.getJULLogger()
+        private val logger = UdNotifierPropertyTest::class.java.getJULLogger()
 
         private lateinit var executor: ThreadPoolExecutor
 
@@ -191,6 +178,27 @@ class NotifierPropertyTest {
         @JvmStatic
         fun afterAll() {
             executor.shutdownNow()
+        }
+    }
+
+    private class UdSubscriber<T>(
+
+        private var _onNext: (T) -> Unit,
+
+        ) : Subscriber<Any> {
+
+        override fun onSubscribe(subscription: Flow.Subscription) {
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        override fun onNext(item: Any) {
+            _onNext(item as T)
+        }
+
+        override fun onError(throwable: Throwable) {
+        }
+
+        override fun onComplete() {
         }
     }
 }
