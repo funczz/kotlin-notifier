@@ -100,41 +100,41 @@ class NotifierTest {
     }
 
     @Test
-    fun `unsubscribe - id がマッチする場合はサブスクリプションをunsubscribeする`() {
+    fun `unsubscribe - name がマッチする場合はサブスクリプションをunsubscribeする`() {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberAsync,
-                id = "foo",
+                name = "foo",
                 executor = Optional.of(executor)
             )
         )
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberSync,
-                id = "foo",
+                name = "foo",
                 executor = Optional.empty()
             )
         )
         sleepMilliseconds()
         assertEquals(2, notifier.subscriptions.size)
-        notifier.unsubscribe(id = Regex("^foo"))
+        notifier.unsubscribe(name = Regex("^foo"))
         sleepMilliseconds()
         assertEquals(0, notifier.subscriptions.size)
         assertEquals("complete", subscriberAsync.actual)
     }
 
     @Test
-    fun `unsubscribe - id がマッチしない場合は何も処理しない`() {
+    fun `unsubscribe - name がマッチしない場合は何も処理しない`() {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberAsync,
-                id = "foo",
+                name = "foo",
                 executor = Optional.of(executor)
             )
         )
         sleepMilliseconds()
         assertEquals(1, notifier.subscriptions.size)
-        notifier.unsubscribe(id = Regex("^bar"))
+        notifier.unsubscribe(name = Regex("^bar"))
         sleepMilliseconds()
         assertEquals(1, notifier.subscriptions.size)
         assertEquals("", subscriberAsync.actual)
@@ -196,41 +196,41 @@ class NotifierTest {
     }
 
     @Test
-    fun `cancel - id がマッチする場合はサブスクリプションをキャンセルする`() {
+    fun `cancel - name がマッチする場合はサブスクリプションをキャンセルする`() {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberAsync,
-                id = "foo",
+                name = "foo",
                 executor = Optional.of(executor)
             )
         )
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberSync,
-                id = "foo",
+                name = "foo",
                 executor = Optional.empty()
             )
         )
         sleepMilliseconds()
         assertEquals(2, notifier.subscriptions.size)
-        notifier.cancel(id = Regex("^foo"))
+        notifier.cancel(name = Regex("^foo"))
         sleepMilliseconds()
         assertEquals(0, notifier.subscriptions.size)
         assertEquals("", subscriberAsync.actual)
     }
 
     @Test
-    fun `cancel - id がマッチしない場合は何も処理しない`() {
+    fun `cancel - name がマッチしない場合は何も処理しない`() {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberAsync,
-                id = "foo",
+                name = "foo",
                 executor = Optional.of(executor)
             )
         )
         sleepMilliseconds()
         assertEquals(1, notifier.subscriptions.size)
-        notifier.cancel(id = Regex("^bar"))
+        notifier.cancel(name = Regex("^bar"))
         sleepMilliseconds()
         assertEquals(1, notifier.subscriptions.size)
         assertEquals("", subscriberAsync.actual)
@@ -348,37 +348,37 @@ class NotifierTest {
     }
 
     @Test
-    fun `post - id がマッチする場合はサブスクライバへアイテムを送信する`() {
+    fun `post - name がマッチする場合はサブスクライバへアイテムを送信する`() {
         val expected = "hello world."
 
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberAsync,
-                id = "/hello/world",
+                name = "/hello/world",
                 executor = Optional.of(executor)
             )
         )
         sleepMilliseconds()
         assertEquals(1, notifier.subscriptions.size)
-        notifier.post(item = expected, id = Regex("^/hello/.*"))
+        notifier.post(item = expected, name = Regex("^/hello/.*"))
         sleepMilliseconds()
         assertEquals(expected, subscriberAsync.actual)
     }
 
     @Test
-    fun `post - id がマッチしない場合は何も処理しない`() {
+    fun `post - name がマッチしない場合は何も処理しない`() {
         val expected = ""
 
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberAsync,
-                id = "/hello/world",
+                name = "/hello/world",
                 executor = Optional.of(executor)
             )
         )
         sleepMilliseconds()
         assertEquals(1, notifier.subscriptions.size)
-        notifier.post(item = "hello world.", id = Regex("^/hello$"))
+        notifier.post(item = "hello world.", name = Regex("^/hello$"))
         sleepMilliseconds()
         assertEquals(expected, subscriberAsync.actual)
     }
@@ -393,49 +393,49 @@ class NotifierTest {
             .subscribeBefore {
                 logger.log(
                     Level.INFO,
-                    "Subscribe Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Subscribe Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .subscribeAfter {
                 logger.log(
                     Level.INFO,
-                    "Subscribe After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Subscribe After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .unsubscribeBefore {
                 logger.log(
                     Level.INFO,
-                    "Unsubscribe Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Unsubscribe Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .unsubscribeAfter {
                 logger.log(
                     Level.INFO,
-                    "Unsubscribe After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Unsubscribe After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .cancelBefore {
                 logger.log(
                     Level.INFO,
-                    "Cancel Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Cancel Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .cancelAfter {
                 logger.log(
                     Level.INFO,
-                    "Cancel After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Cancel After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .postBefore {
                 logger.log(
                     Level.INFO,
-                    "Post Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Post Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .postAfter {
                 logger.log(
                     Level.INFO,
-                    "Post After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Post After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
     }

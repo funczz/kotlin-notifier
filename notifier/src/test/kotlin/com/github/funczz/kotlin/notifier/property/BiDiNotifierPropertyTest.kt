@@ -53,7 +53,7 @@ class BiDiNotifierPropertyTest {
         val property3: ReadWriteNotifierProperty<String> = BiDiNotifierProperty(
             initialValue = expected,
             notifier = notifier,
-            id = "property3",
+            name = "property3",
             executor = Optional.of(executor),
         )
         (property3 as BiDiNotifierProperty).subscriber
@@ -85,7 +85,7 @@ class BiDiNotifierPropertyTest {
         val property3: ReadWriteNotifierProperty<String> = BiDiNotifierProperty(
             initialValue = expected,
             notifier = notifier,
-            id = "property3",
+            name = "property3",
             executor = Optional.of(executor),
         )
         (property3 as BiDiNotifierProperty).subscriber
@@ -118,49 +118,49 @@ class BiDiNotifierPropertyTest {
             .subscribeBefore {
                 logger.log(
                     Level.INFO,
-                    "Subscribe Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Subscribe Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .subscribeAfter {
                 logger.log(
                     Level.INFO,
-                    "Subscribe After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Subscribe After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .unsubscribeBefore {
                 logger.log(
                     Level.INFO,
-                    "Unsubscribe Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Unsubscribe Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .unsubscribeAfter {
                 logger.log(
                     Level.INFO,
-                    "Unsubscribe After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Unsubscribe After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .cancelBefore {
                 logger.log(
                     Level.INFO,
-                    "Cancel Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Cancel Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .cancelAfter {
                 logger.log(
                     Level.INFO,
-                    "Cancel After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Cancel After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .postBefore {
                 logger.log(
                     Level.INFO,
-                    "Post Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Post Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .postAfter {
                 logger.log(
                     Level.INFO,
-                    "Post After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Post After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
 
@@ -171,7 +171,7 @@ class BiDiNotifierPropertyTest {
         property1 = BiDiNotifierProperty(
             initialValue = "",
             notifier = notifier,
-            id = "property1",
+            name = "property1",
             executor = Optional.of(executor),
         )
         (property1 as BiDiNotifierProperty).subscriber
@@ -183,7 +183,7 @@ class BiDiNotifierPropertyTest {
         property2 = BiDiNotifierProperty(
             initialValue = "",
             notifier = notifier,
-            id = "property2",
+            name = "property2",
             executor = Optional.of(executor),
         )
         (property2 as BiDiNotifierProperty).subscriber

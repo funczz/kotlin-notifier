@@ -18,7 +18,7 @@ class NotifierAsyncTest {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = ExSubscriber(),
-                id = "async1-1",
+                name = "async1-1",
                 executor = Optional.of(executor),
             ),
             executor = executor
@@ -26,7 +26,7 @@ class NotifierAsyncTest {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = ExSubscriber(),
-                id = "async1-2",
+                name = "async1-2",
                 executor = Optional.of(executor)
             ),
             executor = executor
@@ -34,7 +34,7 @@ class NotifierAsyncTest {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = ExSubscriber(),
-                id = "async1-3",
+                name = "async1-3",
                 executor = Optional.of(executor)
             ),
             executor = executor
@@ -71,24 +71,24 @@ class NotifierAsyncTest {
     }
 
     @Test
-    fun `unsubscribe - id がマッチする場合はサブスクリプションをunsubscribeする`() {
+    fun `unsubscribe - name がマッチする場合はサブスクリプションをunsubscribeする`() {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberAsync,
-                id = "foo",
+                name = "foo",
                 executor = Optional.of(executor)
             )
         )
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberSync,
-                id = "foo",
+                name = "foo",
                 executor = Optional.empty()
             )
         )
         sleepMilliseconds()
         assertEquals(2, notifier.subscriptions.size)
-        notifier.unsubscribe(id = Regex("^foo"), executor = executor)
+        notifier.unsubscribe(name = Regex("^foo"), executor = executor)
         sleepMilliseconds()
         assertEquals(0, notifier.subscriptions.size)
         assertEquals("complete", subscriberAsync.actual)
@@ -183,7 +183,7 @@ class NotifierAsyncTest {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberSync,
-                id = "async2",
+                name = "async2",
                 executor = Optional.empty()
             ),
             executor = executor
@@ -202,7 +202,7 @@ class NotifierAsyncTest {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberAsync,
-                id = "async3",
+                name = "async3",
                 executor = Optional.of(executor)
             ),
             executor = executor
@@ -221,7 +221,7 @@ class NotifierAsyncTest {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberAsync,
-                id = "async4",
+                name = "async4",
                 executor = Optional.of(executor)
             ),
             executor = executor
@@ -241,7 +241,7 @@ class NotifierAsyncTest {
         notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = subscriberAsync,
-                id = "async5",
+                name = "async5",
                 executor = Optional.of(executor)
             ),
             executor = executor
@@ -264,49 +264,49 @@ class NotifierAsyncTest {
             .subscribeBefore {
                 logger.log(
                     Level.INFO,
-                    "Subscribe Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Subscribe Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .subscribeAfter {
                 logger.log(
                     Level.INFO,
-                    "Subscribe After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Subscribe After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .unsubscribeBefore {
                 logger.log(
                     Level.INFO,
-                    "Unsubscribe Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Unsubscribe Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .unsubscribeAfter {
                 logger.log(
                     Level.INFO,
-                    "Unsubscribe After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Unsubscribe After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .cancelBefore {
                 logger.log(
                     Level.INFO,
-                    "Cancel Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Cancel Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .cancelAfter {
                 logger.log(
                     Level.INFO,
-                    "Cancel After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Cancel After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .postBefore {
                 logger.log(
                     Level.INFO,
-                    "Post Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Post Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .postAfter {
                 logger.log(
                     Level.INFO,
-                    "Post After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Post After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
     }

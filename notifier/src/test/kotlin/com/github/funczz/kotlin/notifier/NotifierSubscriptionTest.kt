@@ -46,7 +46,8 @@ class NotifierSubscriptionTest {
     fun beforeEach() {
         executor = Executors.newCachedThreadPool()
         subscriber = ExSubscriber()
-        subscription = DefaultNotifierSubscription(subscriber = subscriber, id = "/", executor = Optional.of(executor))
+        subscription =
+            DefaultNotifierSubscription(subscriber = subscriber, name = "/", executor = Optional.of(executor))
 
     }
 

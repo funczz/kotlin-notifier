@@ -12,7 +12,7 @@ open class DefaultNotifierSubscription(
 
     override val subscriber: Flow.Subscriber<Any>,
 
-    override val id: String = "",
+    override val name: String = "",
 
     override val executor: Optional<Executor> = Optional.empty(),
 

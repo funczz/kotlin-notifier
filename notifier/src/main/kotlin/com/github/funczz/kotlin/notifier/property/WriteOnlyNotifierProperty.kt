@@ -14,17 +14,17 @@ interface WriteOnlyNotifierProperty<V : Any> {
     /**
      * 更新した値をpostする
      * @param value 値
-     * @param id サブスクリプションidの正規表現
+     * @param name サブスクリプションnameの正規表現
      * @param executor postを実行するExecutor
      * @return 値が更新されたなら真、それ以外は偽
      */
-    fun setValue(value: V, id: Regex = ".*".toRegex(), executor: Executor? = null): Boolean
+    fun setValue(value: V, name: Regex = ".*".toRegex(), executor: Executor? = null): Boolean
 
     /**
      * 値をpostする
-     * @param id サブスクリプションidの正規表現
+     * @param name サブスクリプションnameの正規表現
      * @param executor postを実行するExecutor
      */
-    fun postValue(id: Regex = ".*".toRegex(), executor: Executor? = null)
+    fun postValue(name: Regex = ".*".toRegex(), executor: Executor? = null)
 
 }
