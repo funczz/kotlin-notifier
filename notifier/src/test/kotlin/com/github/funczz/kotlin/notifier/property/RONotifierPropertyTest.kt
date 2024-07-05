@@ -1,30 +1,28 @@
 package com.github.funczz.kotlin.notifier.property
 
 import com.github.funczz.kotlin.getJULLogger
-import com.github.funczz.kotlin.notifier.DefaultNotifierSubscription
 import com.github.funczz.kotlin.notifier.Notifier
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.util.*
 import java.util.concurrent.Executors
-import java.util.concurrent.Flow
-import java.util.concurrent.Flow.Subscriber
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 
 @Suppress("NonAsciiCharacters")
-class UdNotifierPropertyTest {
-
+class RONotifierPropertyTest {
 
     @Test
     fun `getValue 値を取得する`() {
         val expected = "hello world."
 
         val actual: String
-        val prop = UdNotifierProperty(
+        val prop: ReadOnlyNotifierProperty<String> = RONotifierProperty(
             initialValue = expected,
             notifier = notifier,
+            id = "prop",
+            executor = Optional.of(executor),
         )
         actual = prop.getValue()
         sleepMilliseconds()
@@ -32,69 +30,40 @@ class UdNotifierPropertyTest {
     }
 
     @Test
-    fun `setValue 保持する値と異なる値を代入するとpostされる`() {
+    fun `Notifier から値を受け取ると更新される`() {
         val expected = "hello world."
 
-        var actual = ""
-        val prop = UdNotifierProperty(
-            initialValue = "Hello World!",
+        val prop: ReadOnlyNotifierProperty<String> = RONotifierProperty(
+            initialValue = "",
             notifier = notifier,
+            id = "prop",
+            executor = Optional.of(executor),
         )
-        prop.notifier.subscribe(
-            subscription = DefaultNotifierSubscription(
-                subscriber = UdSubscriber<String> { actual = it },
-                id = "prop",
-                executor = Optional.of(executor)
-            )
-        )
+        (prop as RONotifierProperty).subscriber
+            .onNext { println("prop#onNext: $it") }
         sleepMilliseconds()
-        prop.setValue(value = expected)
+        notifier.post(item = expected)
         sleepMilliseconds()
+        val actual = prop.getValue()
         assertEquals(expected, actual)
     }
 
     @Test
-    fun `setValue 保持する値と同一の値を代入するとpostされない`() {
+    fun `Notifier から保持する値と同一の値を受け取ると更新されない`() {
         val expected = "hello world."
 
-        var actual = ""
-        val prop = UdNotifierProperty(
+        val prop: ReadOnlyNotifierProperty<String> = RONotifierProperty(
             initialValue = expected,
             notifier = notifier,
+            id = "prop",
+            executor = Optional.of(executor),
         )
-        prop.notifier.subscribe(
-            subscription = DefaultNotifierSubscription(
-                subscriber = UdSubscriber<String> { actual = it },
-                id = "prop",
-                executor = Optional.of(executor)
-            )
-        )
+        (prop as RONotifierProperty).subscriber
+            .onNext { println("prop#onNext: $it") }
         sleepMilliseconds()
-        prop.setValue(value = expected)
+        notifier.post(item = expected)
         sleepMilliseconds()
-        assertEquals("", actual)
-    }
-
-
-    @Test
-    fun `postValue 値がpostされる`() {
-        val expected = "hello world."
-
-        var actual = ""
-        val prop = UdNotifierProperty(
-            initialValue = expected,
-            notifier = notifier,
-        )
-        prop.notifier.subscribe(
-            subscription = DefaultNotifierSubscription(
-                subscriber = UdSubscriber<String> { actual = it },
-                id = "prop",
-                executor = Optional.of(executor)
-            )
-        )
-        sleepMilliseconds()
-        prop.postValue()
-        sleepMilliseconds()
+        val actual = prop.getValue()
         assertEquals(expected, actual)
     }
 
@@ -164,7 +133,7 @@ class UdNotifierPropertyTest {
 
     companion object {
 
-        private val logger = UdNotifierPropertyTest::class.java.getJULLogger()
+        private val logger = RONotifierPropertyTest::class.java.getJULLogger()
 
         private lateinit var executor: ThreadPoolExecutor
 
@@ -178,27 +147,6 @@ class UdNotifierPropertyTest {
         @JvmStatic
         fun afterAll() {
             executor.shutdownNow()
-        }
-    }
-
-    private class UdSubscriber<T>(
-
-        private var _onNext: (T) -> Unit,
-
-        ) : Subscriber<Any> {
-
-        override fun onSubscribe(subscription: Flow.Subscription) {
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        override fun onNext(item: Any) {
-            _onNext(item as T)
-        }
-
-        override fun onError(throwable: Throwable) {
-        }
-
-        override fun onComplete() {
         }
     }
 }

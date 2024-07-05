@@ -7,7 +7,7 @@ import java.util.concurrent.Executor
  * 代入された値をNotifierでpostするプロパティの実装
  * @author funczz
  */
-open class UdNotifierProperty<V : Any>(
+open class RWNotifierProperty<V : Any>(
 
     /**
      * 初期値
@@ -19,7 +19,7 @@ open class UdNotifierProperty<V : Any>(
      */
     override val notifier: Notifier,
 
-    ) : NotifierProperty<V> {
+    ) : ReadWriteNotifierProperty<V> {
 
     private var _value: V = initialValue
 
@@ -27,14 +27,19 @@ open class UdNotifierProperty<V : Any>(
         return _value
     }
 
-    override fun setValue(value: V, id: Regex, executor: Executor?) {
-        if (_value == value) return
+    override fun setValue(value: V, id: Regex, executor: Executor?): Boolean {
+        if (_value == value) return false
         _value = value
         postValue(id = id, executor = executor)
+        return true
     }
 
     override fun postValue(id: Regex, executor: Executor?) {
+        if (id == DO_NOT_POST_ID_PATTERN) return
         notifier.post(item = _value as Any, id = id, executor = executor)
     }
 
+    companion object {
+        val DO_NOT_POST_ID_PATTERN = "^(?!.).".toRegex() //マッチする文字列が存在しないパターンを指定している "\$^" "^(?!.)."
+    }
 }
