@@ -61,7 +61,7 @@ open class BiDiNotifierProperty<V : Any>(
      * (インナークラス) サブスクライバ
      * @author funczz
      */
-    inner class BiDiNotifierPropertySubscriber : ReadOnlyNotifierPropertySubscriber<V>() {
+    inner class BiDiNotifierPropertySubscriber : NotifierPropertySubscriber<V>() {
 
         @Suppress("UNCHECKED_CAST")
         override fun onNext(item: Any) {

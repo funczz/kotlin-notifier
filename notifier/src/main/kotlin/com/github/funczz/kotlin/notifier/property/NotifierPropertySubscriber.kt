@@ -6,7 +6,7 @@ import java.util.concurrent.Flow
  * ReadOnlyNotifierPropertyのインナークラス定義に使用する
  * @author funczz
  */
-open class ReadOnlyNotifierPropertySubscriber<V : Any> : Flow.Subscriber<Any> {
+open class NotifierPropertySubscriber<V : Any> : Flow.Subscriber<Any> {
 
     private var _onNext: (V) -> Unit = {}
 
@@ -18,7 +18,7 @@ open class ReadOnlyNotifierPropertySubscriber<V : Any> : Flow.Subscriber<Any> {
      * サブスクライバのonNextで実行する処理を定義する
      * @param function サブスクライバのonNextで実行する関数
      */
-    fun onNext(function: (V) -> Unit): ReadOnlyNotifierPropertySubscriber<V> {
+    fun onNext(function: (V) -> Unit): NotifierPropertySubscriber<V> {
         _onNext = function
         return this
     }
@@ -27,7 +27,7 @@ open class ReadOnlyNotifierPropertySubscriber<V : Any> : Flow.Subscriber<Any> {
      * サブスクライバのonErrorで実行する処理を定義する
      * @param function サブスクライバのonErrorで実行する関数
      */
-    fun onError(function: (Throwable) -> Unit): ReadOnlyNotifierPropertySubscriber<V> {
+    fun onError(function: (Throwable) -> Unit): NotifierPropertySubscriber<V> {
         _onError = function
         return this
     }
@@ -36,7 +36,7 @@ open class ReadOnlyNotifierPropertySubscriber<V : Any> : Flow.Subscriber<Any> {
      * サブスクライバのonCompleteで実行する処理を定義する
      * @param function サブスクライバのonCompleteで実行する関数
      */
-    fun onComplete(function: () -> Unit): ReadOnlyNotifierPropertySubscriber<V> {
+    fun onComplete(function: () -> Unit): NotifierPropertySubscriber<V> {
         _onComplete = function
         return this
     }

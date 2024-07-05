@@ -61,7 +61,7 @@ open class RONotifierProperty<V : Any>(
      * (インナークラス) サブスクライバ
      * @author funczz
      */
-    inner class RONotifierPropertySubscriber : ReadOnlyNotifierPropertySubscriber<V>() {
+    inner class RONotifierPropertySubscriber : NotifierPropertySubscriber<V>() {
 
         @Suppress("UNCHECKED_CAST")
         override fun onNext(item: Any) {
