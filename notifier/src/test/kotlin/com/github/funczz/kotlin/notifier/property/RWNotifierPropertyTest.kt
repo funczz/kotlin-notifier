@@ -1,6 +1,7 @@
 package com.github.funczz.kotlin.notifier.property
 
 import com.github.funczz.kotlin.getJULLogger
+import com.github.funczz.kotlin.notifier.DefaultNotifierSubscription
 import com.github.funczz.kotlin.notifier.Notifier
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -13,106 +14,90 @@ import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 
 @Suppress("NonAsciiCharacters")
-class BdNotifierPropertyTest {
-
+class RWNotifierPropertyTest {
 
     @Test
     fun `getValue 値を取得する`() {
-        val expected = ""
-        val actual = property1.getValue()
+        val expected = "hello world."
+
+        val actual: String
+        val prop: ReadWriteNotifierProperty<String> = RWNotifierProperty(
+            initialValue = expected,
+            notifier = notifier,
+        )
+        actual = prop.getValue()
+        sleepMilliseconds()
         assertEquals(expected, actual)
     }
 
     @Test
-    fun `setValue property1で更新した値をproperty2から取得する`() {
+    fun `setValue 保持する値と異なる値を代入するとpostされる`() {
         val expected = "hello world."
 
-        //property1
-        property1.setValue(value = expected)
+        var actual = ""
+        val prop: ReadWriteNotifierProperty<String> = RWNotifierProperty(
+            initialValue = "Hello World!",
+            notifier = notifier,
+        )
+        prop.notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = RWSubscriber<String> { actual = it },
+                id = "prop",
+                executor = Optional.of(executor)
+            )
+        )
         sleepMilliseconds()
-        //property2
-        val actual = property2.getValue()
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun `setValue property2で更新した値をproperty1から取得する`() {
-        val expected = "hello world."
-
-        //property2
-        property2.setValue(value = expected)
+        prop.setValue(value = expected)
         sleepMilliseconds()
-        //property1
-        val actual = property1.getValue()
         assertEquals(expected, actual)
     }
 
     @Test
     fun `setValue 保持する値と同一の値を代入するとpostされない`() {
-        var expected = "hello world."
+        val expected = "hello world."
 
         var actual = ""
-        //property3
-        val property3 = BdNotifierProperty(
+        val prop: ReadWriteNotifierProperty<String> = RWNotifierProperty(
             initialValue = expected,
             notifier = notifier,
-            id = "property3",
-            executor = Optional.of(executor),
         )
-        //property1
-        property1.setValue(value = "")
+        prop.notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = RWSubscriber<String> { actual = it },
+                id = "prop",
+                executor = Optional.of(executor)
+            )
+        )
         sleepMilliseconds()
-        //property3
-        actual = property3.getValue()
-        assertEquals(expected, actual)
-
-        /**
-         * property3がproperty1とバインドされている事を確認する
-         */
-        expected = "hello, hello world."
-        //property1
-        property1.setValue(value = expected)
+        prop.setValue(value = expected)
         sleepMilliseconds()
-        //property3
-        actual = property3.getValue()
-        assertEquals(expected, actual)
+        assertEquals("", actual)
     }
 
     @Test
-    fun `postValue property3の値をproperty1から取得する`() {
-        var expected = "hello world."
+    fun `postValue 値がpostされる`() {
+        val expected = "hello world."
 
         var actual = ""
-        //property3
-        val property3 = BdNotifierProperty(
+        val prop: ReadWriteNotifierProperty<String> = RWNotifierProperty(
             initialValue = expected,
             notifier = notifier,
-            id = "property3",
-            executor = Optional.of(executor),
+        )
+        prop.notifier.subscribe(
+            subscription = DefaultNotifierSubscription(
+                subscriber = RWSubscriber<String> { actual = it },
+                id = "prop",
+                executor = Optional.of(executor)
+            )
         )
         sleepMilliseconds()
-        //property3
-        property3.postValue()
+        prop.postValue()
         sleepMilliseconds()
-        //property1
-        actual = property1.getValue()
-        assertEquals(expected, actual)
-
-        /**
-         * property3がproperty1とバインドされている事を確認する
-         */
-        expected = "hello, hello world."
-        //property1
-        property1.setValue(value = expected)
-        sleepMilliseconds()
-        //property3
-        actual = property3.getValue()
         assertEquals(expected, actual)
     }
 
     @BeforeEach
     fun beforeEach() {
-        //notifier
         notifier = Notifier()
             .subscribeBefore {
                 logger.log(
@@ -162,34 +147,6 @@ class BdNotifierPropertyTest {
                     "Post After: thread=${Thread.currentThread().name}, id=${it.id}"
                 )
             }
-
-        //sleep
-        sleepMilliseconds()
-
-        //property1
-        property1 = BdNotifierProperty(
-            initialValue = "",
-            notifier = notifier,
-            id = "property1",
-            executor = Optional.of(executor),
-        )
-        property1.subscriber
-            .onError { it.printStackTrace() }
-            .onComplete { println("property1::onComplete") }
-
-        //property2
-        property2 = BdNotifierProperty(
-            initialValue = "",
-            notifier = notifier,
-            id = "property2",
-            executor = Optional.of(executor),
-        )
-        property2.subscriber
-            .onError { it.printStackTrace() }
-            .onComplete { println("property2::onComplete") }
-
-        //sleep
-        sleepMilliseconds()
     }
 
     @AfterEach
@@ -201,14 +158,11 @@ class BdNotifierPropertyTest {
         TimeUnit.MILLISECONDS.sleep(milliseconds)
     }
 
-    private lateinit var property1: BdNotifierProperty<String>
-
-    private lateinit var property2: BdNotifierProperty<String>
     private lateinit var notifier: Notifier
 
     companion object {
 
-        private val logger = UdNotifierPropertyTest::class.java.getJULLogger()
+        private val logger = RWNotifierPropertyTest::class.java.getJULLogger()
 
         private lateinit var executor: ThreadPoolExecutor
 
@@ -225,7 +179,7 @@ class BdNotifierPropertyTest {
         }
     }
 
-    private class UdSubscriber<T>(
+    private class RWSubscriber<T>(
 
         private var _onNext: (T) -> Unit,
 
