@@ -67,7 +67,7 @@ open class RONotifierProperty<V : Any>(
         override fun onNext(item: Any) {
             val result = setValue(
                 value = item as V,
-                name = RWNotifierProperty.DO_NOT_POST_PATTERN,
+                name = Notifier.DO_NOT_POST_PATTERN,
                 executor = if (subscription.executor.isPresent) subscription.executor.get() else null
             )
             if (result) super.onNext(item)

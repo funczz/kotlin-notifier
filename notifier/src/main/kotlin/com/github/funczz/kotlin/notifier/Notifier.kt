@@ -319,6 +319,10 @@ class Notifier {
 
     companion object {
 
+        @JvmStatic
+        val DO_NOT_POST_PATTERN = "^(?!.).".toRegex() //マッチする文字列が存在しないパターンを指定している "\$^" "^(?!.)."
+
+        @JvmStatic
         private var instance: Notifier? = null
 
         /**

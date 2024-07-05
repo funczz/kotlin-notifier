@@ -35,11 +35,7 @@ open class RWNotifierProperty<V : Any>(
     }
 
     override fun postValue(name: Regex, executor: Executor?) {
-        if (name == DO_NOT_POST_PATTERN) return
+        if (name == Notifier.DO_NOT_POST_PATTERN) return
         notifier.post(item = _value as Any, name = name, executor = executor)
-    }
-
-    companion object {
-        val DO_NOT_POST_PATTERN = "^(?!.).".toRegex() //マッチする文字列が存在しないパターンを指定している "\$^" "^(?!.)."
     }
 }
