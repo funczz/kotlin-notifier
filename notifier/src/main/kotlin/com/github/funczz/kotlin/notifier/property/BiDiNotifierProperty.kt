@@ -22,9 +22,9 @@ open class BiDiNotifierProperty<V : Any>(
     notifier: Notifier,
 
     /**
-     * サブスクリプションid
+     * サブスクリプションのname
      */
-    id: String,
+    name: String,
 
     /**
      * Notifierを実行するExecutor
@@ -43,7 +43,7 @@ open class BiDiNotifierProperty<V : Any>(
      */
     val subscription = DefaultNotifierSubscription(
         subscriber = subscriber,
-        id = id,
+        name = name,
         executor = executor,
     )
 
@@ -67,7 +67,7 @@ open class BiDiNotifierProperty<V : Any>(
         override fun onNext(item: Any) {
             val result = setValue(
                 value = item as V,
-                id = RWNotifierProperty.DO_NOT_POST_ID_PATTERN,
+                name = RWNotifierProperty.DO_NOT_POST_PATTERN,
                 executor = if (subscription.executor.isPresent) subscription.executor.get() else null
             )
             if (result) super.onNext(item)

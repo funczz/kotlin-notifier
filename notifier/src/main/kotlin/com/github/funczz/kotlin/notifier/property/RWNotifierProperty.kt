@@ -27,19 +27,19 @@ open class RWNotifierProperty<V : Any>(
         return _value
     }
 
-    override fun setValue(value: V, id: Regex, executor: Executor?): Boolean {
+    override fun setValue(value: V, name: Regex, executor: Executor?): Boolean {
         if (_value == value) return false
         _value = value
-        postValue(id = id, executor = executor)
+        postValue(name = name, executor = executor)
         return true
     }
 
-    override fun postValue(id: Regex, executor: Executor?) {
-        if (id == DO_NOT_POST_ID_PATTERN) return
-        notifier.post(item = _value as Any, id = id, executor = executor)
+    override fun postValue(name: Regex, executor: Executor?) {
+        if (name == DO_NOT_POST_PATTERN) return
+        notifier.post(item = _value as Any, name = name, executor = executor)
     }
 
     companion object {
-        val DO_NOT_POST_ID_PATTERN = "^(?!.).".toRegex() //マッチする文字列が存在しないパターンを指定している "\$^" "^(?!.)."
+        val DO_NOT_POST_PATTERN = "^(?!.).".toRegex() //マッチする文字列が存在しないパターンを指定している "\$^" "^(?!.)."
     }
 }

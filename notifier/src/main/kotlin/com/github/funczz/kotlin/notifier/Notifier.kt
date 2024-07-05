@@ -199,11 +199,11 @@ class Notifier {
 
     /**
      * サブスクリプションをリストから削除する
-     * @param id 対象を抽出するidの正規表現
+     * @param name サブスクリプションnameの正規表現
      * @param executor unsubscribe処理するExecutor
      */
-    fun unsubscribe(id: Regex, executor: Executor? = null) = lock.withLock {
-        unsubscribePredicate(subscriptions = _subscriptions.filter { it.id.matches(id) }, executor = executor)
+    fun unsubscribe(name: Regex, executor: Executor? = null) = lock.withLock {
+        unsubscribePredicate(subscriptions = _subscriptions.filter { it.name.matches(name) }, executor = executor)
     }
 
     /**
@@ -243,11 +243,11 @@ class Notifier {
 
     /**
      * サブスクリプションをリストから削除するが、サブスクライバに対しては何も操作を行わない
-     * @param id idの正規表現
+     * @param name サブスクリプションnameの正規表現
      * @param executor cancel処理するExecutor
      */
-    fun cancel(id: Regex, executor: Executor? = null) = lock.withLock {
-        cancelPredicate(subscriptions = _subscriptions.filter { it.id.matches(id) }, executor = executor)
+    fun cancel(name: Regex, executor: Executor? = null) = lock.withLock {
+        cancelPredicate(subscriptions = _subscriptions.filter { it.name.matches(name) }, executor = executor)
     }
 
     /**
@@ -259,14 +259,14 @@ class Notifier {
     }
 
     /**
-     * idがマッチしたサブスクリプションのサブスクライバへアイテムを送信する
+     * サブスクリプションnameがマッチしたサブスクリプションのサブスクライバへアイテムを送信する
      * @param item アイテム
-     * @param id idの正規表現
+     * @param name サブスクリプションnameの正規表現
      * @param executor post処理するExecutor
      */
-    fun post(item: Any, id: Regex = Regex(".*"), executor: Executor? = null) = lock.withLock {
+    fun post(item: Any, name: Regex = Regex(".*"), executor: Executor? = null) = lock.withLock {
         val runnable = Runnable {
-            for (s in _subscriptions.filter { it.id.matches(regex = id) }) {
+            for (s in _subscriptions.filter { it.name.matches(regex = name) }) {
                 _postBefore(s)
                 val runnable = Runnable {
                     try {

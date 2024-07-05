@@ -15,10 +15,10 @@ interface NotifierSubscription : Flow.Subscription {
     val subscriber: Flow.Subscriber<Any>
 
     /**
-     * サブスクリプションの識別子
+     * サブスクリプションに与える名前
      * 任意の文字列
      */
-    val id: String
+    val name: String
 
     /**
      * サブスクライバのonNextメソッドを投入するスレッドプール

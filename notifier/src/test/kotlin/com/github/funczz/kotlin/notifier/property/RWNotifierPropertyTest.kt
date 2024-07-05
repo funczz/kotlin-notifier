@@ -42,7 +42,7 @@ class RWNotifierPropertyTest {
         prop.notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = RWSubscriber<String> { actual = it },
-                id = "prop",
+                name = "prop",
                 executor = Optional.of(executor)
             )
         )
@@ -64,7 +64,7 @@ class RWNotifierPropertyTest {
         prop.notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = RWSubscriber<String> { actual = it },
-                id = "prop",
+                name = "prop",
                 executor = Optional.of(executor)
             )
         )
@@ -86,7 +86,7 @@ class RWNotifierPropertyTest {
         prop.notifier.subscribe(
             subscription = DefaultNotifierSubscription(
                 subscriber = RWSubscriber<String> { actual = it },
-                id = "prop",
+                name = "prop",
                 executor = Optional.of(executor)
             )
         )
@@ -102,49 +102,49 @@ class RWNotifierPropertyTest {
             .subscribeBefore {
                 logger.log(
                     Level.INFO,
-                    "Subscribe Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Subscribe Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .subscribeAfter {
                 logger.log(
                     Level.INFO,
-                    "Subscribe After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Subscribe After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .unsubscribeBefore {
                 logger.log(
                     Level.INFO,
-                    "Unsubscribe Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Unsubscribe Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .unsubscribeAfter {
                 logger.log(
                     Level.INFO,
-                    "Unsubscribe After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Unsubscribe After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .cancelBefore {
                 logger.log(
                     Level.INFO,
-                    "Cancel Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Cancel Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .cancelAfter {
                 logger.log(
                     Level.INFO,
-                    "Cancel After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Cancel After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .postBefore {
                 logger.log(
                     Level.INFO,
-                    "Post Before: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Post Before: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
             .postAfter {
                 logger.log(
                     Level.INFO,
-                    "Post After: thread=${Thread.currentThread().name}, id=${it.id}"
+                    "Post After: thread=${Thread.currentThread().name}, name=${it.name}"
                 )
             }
     }
